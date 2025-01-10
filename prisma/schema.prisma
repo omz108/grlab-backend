@@ -1,0 +1,54 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Report {
+  id Int     @id @default(autoincrement())
+  reportType String?
+  reportNumber String @unique
+  conclusions String?
+  species String? // species/Variety
+  weight String?
+  colour String?
+  shapeCut String?
+  dimensions String?
+  opticCharacter String?
+  refractiveIndex String?
+  specificGravity String?
+  magnification String?
+  remarks String?
+  imageUrl String?
+}
+
+
+model Admin {
+  id String @id @default(cuid())
+  name String?
+  username String @unique
+  password String
+}
+
+model User {
+  id String @id @default(cuid())
+  name String?
+  mobileNumber String
+  emailId String?
+}
+
+model OTP {
+  id              Int             @id @default(autoincrement())
+  mobileNumber    String
+  otp             String
+  expiry          DateTime
+}
