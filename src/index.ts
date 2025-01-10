@@ -22,6 +22,19 @@ app.post('/getCertificate', async (req, res) => {
     }
 
     try {
+        // verify otp
+        const record = await prisma.oTP.findUnique({
+            where: {
+                mobileNumber
+            }
+        })
+
+        if (!record || record.otp !== otp || new Date() > record.expiry) {
+            res.status(400).json({error: 'Invalid or expired OTP'});
+            return;
+        }
+
+        // find report in db
         const report = await prisma.report.findUnique({
             where: {
                 reportNumber

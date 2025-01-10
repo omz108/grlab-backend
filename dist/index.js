@@ -15,8 +15,10 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const database_1 = require("./config/database");
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
+const dotenv_1 = __importDefault(require("dotenv"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+dotenv_1.default.config();
 // app.get('/', (req, res) => {
 //     res.json({message: "Hello World!"})
 // })
@@ -27,6 +29,17 @@ app.post('/getCertificate', (req, res) => __awaiter(void 0, void 0, void 0, func
         return;
     }
     try {
+        // verify otp
+        const record = yield database_1.prisma.oTP.findUnique({
+            where: {
+                mobileNumber
+            }
+        });
+        if (!record || record.otp !== otp || new Date() > record.expiry) {
+            res.status(400).json({ error: 'Invalid or expired OTP' });
+            return;
+        }
+        // find report in db
         const report = yield database_1.prisma.report.findUnique({
             where: {
                 reportNumber
