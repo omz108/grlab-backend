@@ -34,29 +34,46 @@ function sendOTP(mobileNumber, otp) {
         });
     });
 }
-router.post('/sendOTP', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+router.post('/generate', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { mobileNumber } = req.body;
     if (!mobileNumber) {
         res.status(400).json({ error: 'Mobile number is required' });
         return;
     }
     const otp = generateOTP();
-    const expiry = new Date(Date.now() + 5 * 60 * 1000);
+    const expiry = new Date(Date.now() + 5 * 60 * 1000).toISOString();
     try {
-        yield database_1.prisma.oTP.create({
-            data: {
-                mobileNumber,
-                otp,
-                expiry
-            }
+        const existingRecord = yield database_1.prisma.oTP.findUnique({
+            where: { mobileNumber }
         });
+        if (existingRecord) {
+            yield database_1.prisma.oTP.update({
+                where: {
+                    mobileNumber
+                }, data: {
+                    otp,
+                    expiry
+                }
+            });
+        }
+        else {
+            yield database_1.prisma.oTP.create({
+                data: {
+                    mobileNumber,
+                    otp,
+                    expiry
+                }
+            });
+        }
         // Send OTP via SMS
         yield sendOTP(mobileNumber, otp);
         res.status(200).json({ message: 'OTP sent successfully' });
         return;
     }
     catch (error) {
+        console.log('error while sending: ', error);
         res.json({ error: 'Failed to send OTP' });
         return;
     }
 }));
+exports.default = router;

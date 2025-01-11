@@ -1,6 +1,7 @@
 import express, { json } from 'express';
 import { prisma } from './config/database';
 import adminRoutes from './routes/adminRoutes';
+import otpRoutes from './routes/otpRoutes';
 import dotenv from 'dotenv';
 
 const app = express();
@@ -28,8 +29,9 @@ app.post('/getCertificate', async (req, res) => {
                 mobileNumber
             }
         })
-
-        if (!record || record.otp !== otp || new Date() > record.expiry) {
+        
+        
+        if (!record || record.otp !== otp || new Date().toISOString() > record?.expiry) {
             res.status(400).json({error: 'Invalid or expired OTP'});
             return;
         }
@@ -61,6 +63,7 @@ app.post('/getCertificate', async (req, res) => {
 
 // Admin routes
 app.use('/admin', adminRoutes);
+app.use('/otp', otpRoutes);
 
 
 

@@ -50,5 +50,5 @@ model OTP {
   id              Int         @id @default(autoincrement())
   mobileNumber    String      @unique
   otp             String
-  expiry          DateTime
+  expiry          String
 }

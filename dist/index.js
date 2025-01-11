@@ -15,6 +15,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const database_1 = require("./config/database");
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
+const otpRoutes_1 = __importDefault(require("./routes/otpRoutes"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
@@ -35,7 +36,7 @@ app.post('/getCertificate', (req, res) => __awaiter(void 0, void 0, void 0, func
                 mobileNumber
             }
         });
-        if (!record || record.otp !== otp || new Date() > record.expiry) {
+        if (!record || record.otp !== otp || new Date().toISOString() > (record === null || record === void 0 ? void 0 : record.expiry)) {
             res.status(400).json({ error: 'Invalid or expired OTP' });
             return;
         }
@@ -61,6 +62,7 @@ app.post('/getCertificate', (req, res) => __awaiter(void 0, void 0, void 0, func
 }));
 // Admin routes
 app.use('/admin', adminRoutes_1.default);
+app.use('/otp', otpRoutes_1.default);
 app.listen(3000, () => {
     console.log("App is  listening at port 3000");
 });

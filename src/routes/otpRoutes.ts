@@ -23,7 +23,7 @@ async function sendOTP(mobileNumber:string, otp: string): Promise<void> {
     })
 }
 
-router.post('/sendOTP', async (req, res) => {
+router.post('/generate', async (req, res) => {
     const { mobileNumber } = req.body;
 
     if (!mobileNumber) {
@@ -32,23 +32,42 @@ router.post('/sendOTP', async (req, res) => {
     }
 
     const otp = generateOTP();
-    const expiry = new Date(Date.now() + 5 * 60 * 1000);
+    const expiry = new Date(Date.now() + 5 * 60 * 1000).toISOString();
 
     try {
-        await prisma.oTP.create({
-            data: {
-                mobileNumber,
+        const existingRecord = await prisma.oTP.findUnique({
+            where: { mobileNumber }
+        })
+
+        if ( existingRecord ) {
+        await prisma.oTP.update({
+            where: {
+                mobileNumber
+            }, data: {
                 otp,
                 expiry
             }
         })
+        } else {
+            await prisma.oTP.create({
+                data: {
+                    mobileNumber,
+                    otp,
+                    expiry
+                }
+            })
+        }
+
         // Send OTP via SMS
         await sendOTP(mobileNumber, otp);
 
         res.status(200).json({ message: 'OTP sent successfully' });
         return;
     } catch (error) {
+        console.log('error while sending: ',error);
         res.json({error: 'Failed to send OTP'});
         return;
     }
 })
+
+export default router;
