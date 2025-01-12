@@ -3,10 +3,12 @@ import { prisma } from './config/database';
 import adminRoutes from './routes/adminRoutes';
 import otpRoutes from './routes/otpRoutes';
 import dotenv from 'dotenv';
+import cors from 'cors';
 
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 dotenv.config();
 
 

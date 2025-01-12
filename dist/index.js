@@ -17,8 +17,10 @@ const database_1 = require("./config/database");
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
 const otpRoutes_1 = __importDefault(require("./routes/otpRoutes"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const cors_1 = __importDefault(require("cors"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
+app.use((0, cors_1.default)());
 dotenv_1.default.config();
 // app.get('/', (req, res) => {
 //     res.json({message: "Hello World!"})
