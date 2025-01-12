@@ -14,7 +14,7 @@ dotenv.config();
 //     res.json({message: "Hello World!"})
 // })
 
-app.post('/getCertificate', async (req, res) => {
+app.post('/reportDetails', async (req, res) => {
     const { reportNumber, mobileNumber, otp } = req.body;
 
     if (!reportNumber || !mobileNumber || !otp) {

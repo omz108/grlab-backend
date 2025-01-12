@@ -23,7 +23,7 @@ dotenv_1.default.config();
 // app.get('/', (req, res) => {
 //     res.json({message: "Hello World!"})
 // })
-app.post('/getCertificate', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.post('/reportDetails', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { reportNumber, mobileNumber, otp } = req.body;
     if (!reportNumber || !mobileNumber || !otp) {
         res.status(400).json({ error: "All fields are required!" });
