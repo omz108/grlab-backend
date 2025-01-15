@@ -82,4 +82,59 @@ router.post('/addRecord', async (req, res) => {
     }
 })
 
+router.get('/fetchAllReports', async (req, res) => {
+    try {
+        const reports = await prisma.report.findMany({
+            select: {
+                reportNumber: true
+            }, orderBy: {
+                id: 'desc'
+            }
+        })
+        res.status(200).json(reports);
+        return;
+    } catch(err) {
+        res.status(500).json({error: 'Failed to fetch reports'})
+        return;
+    } 
+})
+
+router.put('/report/:reportNumber', async (req, res) => {
+    const { reportNumber } = req.params;
+    const updatedData = req.body;
+    try {
+        const updatedReport = await prisma.report.update({
+            where: { reportNumber },
+            data: updatedData
+        });
+        res.status(200).json({ message: 'Report updated successfully', updatedReport });
+        return;
+    } catch(err: any) {
+        if (err.code === 'P2025') {
+            res.status(404).json({ error: 'Report not found' });
+            return;
+        }
+        res.status(500).json({error: 'Failed to update report'});
+        return;
+    }  
+})
+
+router.delete('/report/:reportNumber', async (req, res) => {
+    const { reportNumber } = req.params;
+    try {
+        await prisma.report.delete({
+            where: { reportNumber }
+        });
+        res.status(200).json({ message: 'Report deleted successfully' });
+        return;
+    } catch(err:any) {
+        if (err.code === 'P2025') {
+            res.status(404).json({error: "Report not found"});
+            return;
+        }
+        res.status(500).json({error: 'Failed to delete report'})
+        return;
+    }
+})
+
 export default router;

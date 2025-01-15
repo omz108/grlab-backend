@@ -86,4 +86,59 @@ router.post('/addRecord', (req, res) => __awaiter(void 0, void 0, void 0, functi
         return;
     }
 }));
+router.get('/fetchAllReports', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const reports = yield database_1.prisma.report.findMany({
+            select: {
+                reportNumber: true
+            }, orderBy: {
+                id: 'desc'
+            }
+        });
+        res.status(200).json(reports);
+        return;
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Failed to fetch reports' });
+        return;
+    }
+}));
+router.put('/report/:reportNumber', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { reportNumber } = req.params;
+    const updatedData = req.body;
+    try {
+        const updatedReport = yield database_1.prisma.report.update({
+            where: { reportNumber },
+            data: updatedData
+        });
+        res.status(200).json({ message: 'Report updated successfully', updatedReport });
+        return;
+    }
+    catch (err) {
+        if (err.code === 'P2025') {
+            res.status(404).json({ error: 'Report not found' });
+            return;
+        }
+        res.status(500).json({ error: 'Failed to update report' });
+        return;
+    }
+}));
+router.delete('/report/:reportNumber', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { reportNumber } = req.params;
+    try {
+        yield database_1.prisma.report.delete({
+            where: { reportNumber }
+        });
+        res.status(200).json({ message: 'Report deleted successfully' });
+        return;
+    }
+    catch (err) {
+        if (err.code === 'P2025') {
+            res.status(404).json({ error: "Report not found" });
+            return;
+        }
+        res.status(500).json({ error: 'Failed to delete report' });
+        return;
+    }
+}));
 exports.default = router;
