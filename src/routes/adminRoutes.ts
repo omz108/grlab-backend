@@ -2,9 +2,11 @@ import { Router } from "express";
 import { prisma } from "../config/database";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { authenticateAdmin } from "../middlewares";
 
 const router = Router();
 
+// admin-login route
 router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
@@ -52,6 +54,12 @@ router.post('/login', async (req, res) => {
     }
 
 })
+
+// apply authentication to subsequent routes
+router.use(authenticateAdmin);
+
+
+// protected admin routes
 
 router.post('/addRecord', async (req, res) => {
     const reportData = req.body;

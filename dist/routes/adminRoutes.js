@@ -16,7 +16,9 @@ const express_1 = require("express");
 const database_1 = require("../config/database");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const middlewares_1 = require("../middlewares");
 const router = (0, express_1.Router)();
+// admin-login route
 router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { username, password } = req.body;
     if (!username || !password) {
@@ -60,6 +62,9 @@ router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* 
         return;
     }
 }));
+// apply authentication to subsequent routes
+router.use(middlewares_1.authenticateAdmin);
+// protected admin routes
 router.post('/addRecord', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const reportData = req.body;
     const reportNumber = reportData.reportNumber;
