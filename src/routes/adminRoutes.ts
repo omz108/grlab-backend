@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { prisma } from "../config/database";
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 const router = Router();
 
@@ -28,22 +29,48 @@ router.post('/login', async (req, res) => {
             res.status(401).json({error: 'Invalid password'});
             return;
         }
-        res.json(admin);
-    } catch(error) {
 
+        const adminPayload = { id: admin.id };
+        const secretKey = process.env.JWT_SECRET_KEY;
+        if (!secretKey) {
+            throw new Error('JWT_SECRET_KEY is not set in environment variables');
+        }
+        const token = jwt.sign(adminPayload, secretKey, { expiresIn: '24h' });
+        res.cookie('adminToken', token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            maxAge: 24 * 60 * 60 * 1000,
+            sameSite: 'strict'
+        })
+        res.json({ message: 'Login successful', 
+            admin: { id: admin.id, username: admin.username }
+        });
+        return;
+    } catch(error) {
+        res.status(500).json({error: 'An error occured'});
+        return;
     }
 
 })
 
 router.post('/addRecord', async (req, res) => {
     const reportData = req.body;
+    const reportNumber = reportData.reportNumber;
     try {
+        const existingReport = await prisma.report.findUnique({where: { reportNumber }});
+        if (existingReport) {
+            res.status(409).json({error: `Report with Report ID: ${ reportNumber } already exists`});
+            return;
+        }
         const newReport = await prisma.report.create({
             data: reportData
         })
         res.status(201).json(newReport);
+        return;
     } catch(err) {
-        res.status(500).json({error: 'Failed to save the report.'})
+        console.log(err);
+        res.status(500).json({error: 'Failed to save the report.'});
+        return;
     }
 })
 
