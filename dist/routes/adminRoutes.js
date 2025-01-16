@@ -159,4 +159,19 @@ router.get('/reportDetail/:reportNumber', (req, res) => __awaiter(void 0, void 0
         return;
     }
 }));
+router.post('/logout', (req, res) => {
+    try {
+        res.clearCookie('adminToken', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'strict' : 'lax'
+        });
+        res.status(200).json({ message: 'Admin logged out successfully' });
+        return;
+    }
+    catch (err) {
+        res.status(500).json({ error: 'Failed to logout' });
+        return;
+    }
+});
 exports.default = router;
