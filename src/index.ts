@@ -9,9 +9,15 @@ import cookieParser from 'cookie-parser';
 const app = express();
 
 app.use(express.json());
-app.use(cors());
 app.use(cookieParser());
 dotenv.config();
+
+app.use(
+    cors({
+      origin: 'http://localhost:5173', // Frontend URL
+      credentials: true, // Allow cookies to be sent
+    })
+  );
 
 
 // app.get('/', (req, res) => {

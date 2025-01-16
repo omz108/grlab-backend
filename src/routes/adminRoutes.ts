@@ -42,7 +42,7 @@ router.post('/login', async (req, res) => {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             maxAge: 24 * 60 * 60 * 1000,
-            sameSite: 'strict'
+            sameSite: process.env.NODE_ENV === 'production'? 'strict' : 'lax'
         })
         res.json({ message: 'Login successful', 
             admin: { id: admin.id, username: admin.username }
@@ -133,6 +133,24 @@ router.delete('/report/:reportNumber', async (req, res) => {
             return;
         }
         res.status(500).json({error: 'Failed to delete report'})
+        return;
+    }
+})
+
+router.get('/reportDetail/:reportNumber', async (req, res) => {
+    const { reportNumber } = req.params;
+    try {
+        const reportDetail = await prisma.report.findUnique({
+            where: { reportNumber }
+        })
+        if (!reportDetail) {
+            res.status(404).json({error: 'Report not found, Please enter a valid report number'});
+            return;
+        }
+        res.status(200).json(reportDetail);
+        return;
+    } catch(err) {
+        res.status(500).json({error: 'Failed to fetch details'});
         return;
     }
 })
