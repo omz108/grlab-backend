@@ -65,6 +65,10 @@ router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* 
 // apply authentication to subsequent routes
 router.use(middlewares_1.authenticateAdmin);
 // protected admin routes
+router.get('/checkLogin', (req, res) => {
+    res.status(200).json({ message: 'You are already logged in' });
+    return;
+});
 router.post('/addRecord', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const reportData = req.body;
     const reportNumber = reportData.reportNumber;

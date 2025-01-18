@@ -61,6 +61,11 @@ router.use(authenticateAdmin);
 
 // protected admin routes
 
+router.get('/checkLogin', (req, res) => {
+    res.status(200).json({message: 'You are already logged in'});
+    return;
+})
+
 router.post('/addRecord', async (req, res) => {
     const reportData = req.body;
     const reportNumber = reportData.reportNumber;
