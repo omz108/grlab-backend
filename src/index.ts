@@ -49,7 +49,7 @@ app.post('/reportDetails', async (req, res) => {
         }
 
         // find report in db
-        const report = await prisma.report.findUnique({
+        const report = await prisma.gemReport.findUnique({
             where: {
                 reportNumber
             }

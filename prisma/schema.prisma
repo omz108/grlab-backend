@@ -13,9 +13,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Report {
+model GemReport {
   id Int     @id @default(autoincrement())
-  reportType String?
+  // reportType String?
   reportNumber String @unique
   conclusions String?
   species String? // species/Variety
@@ -32,7 +32,7 @@ model Report {
 }
 
 
-model Rudraksha {
+model RudrakshaReport {
   id           Int @id @default(autoincrement())
   reportNumber String @unique
   weight       String?
@@ -40,12 +40,12 @@ model Rudraksha {
   mounted      String?
   shape        String?
   dimension    String?
-  realFace     String?
-  artificialFace String?
-  testCameOut    String?
-  anyOtherTest String?
-  origin       String?
-  comment      String?
+  naturalFaces     String?
+  artificialFaces  String?
+  testCameOut      String?
+  xRayResult       String?
+  origin           String?
+  comment          String?
 }
 
 

@@ -101,7 +101,7 @@ router.post('/addGemRecord', upload.single('image'), async (req, res) => {
     const reportNumber = reportData.reportNumber;
 
     try {
-        const existingReport = await prisma.report.findUnique({
+        const existingReport = await prisma.gemReport.findUnique({
             where: {reportNumber}
         })
 
@@ -110,7 +110,7 @@ router.post('/addGemRecord', upload.single('image'), async (req, res) => {
             return;
         }
 
-        const newReport = await prisma.report.create({
+        const newReport = await prisma.gemReport.create({
             data: {
                 ...reportData,
                 imageUrl: `/uploads/${req.file?.filename}`,
@@ -129,12 +129,12 @@ router.post('/addRecord', async (req, res) => {
     const reportData = req.body;
     const reportNumber = reportData.reportNumber;
     try {
-        const existingReport = await prisma.report.findUnique({where: { reportNumber }});
+        const existingReport = await prisma.gemReport.findUnique({where: { reportNumber }});
         if (existingReport) {
             res.status(409).json({error: `Report with Report ID: ${ reportNumber } already exists`});
             return;
         }
-        const newReport = await prisma.report.create({
+        const newReport = await prisma.gemReport.create({
             data: reportData
         })
         res.status(201).json(newReport);
@@ -148,7 +148,7 @@ router.post('/addRecord', async (req, res) => {
 
 router.get('/fetchAllReports', async (req, res) => {
     try {
-        const reports = await prisma.report.findMany({
+        const reports = await prisma.gemReport.findMany({
             select: {
                 reportNumber: true
             }, orderBy: {
@@ -167,7 +167,7 @@ router.put('/report/:reportNumber', async (req, res) => {
     const { reportNumber } = req.params;
     const updatedData = req.body;
     try {
-        const updatedReport = await prisma.report.update({
+        const updatedReport = await prisma.gemReport.update({
             where: { reportNumber },
             data: updatedData
         });
@@ -186,7 +186,7 @@ router.put('/report/:reportNumber', async (req, res) => {
 router.delete('/report/:reportNumber', async (req, res) => {
     const { reportNumber } = req.params;
     try {
-        await prisma.report.delete({
+        await prisma.gemReport.delete({
             where: { reportNumber }
         });
         res.status(200).json({ message: 'Report deleted successfully' });
@@ -204,7 +204,7 @@ router.delete('/report/:reportNumber', async (req, res) => {
 router.get('/reportDetail/:reportNumber', async (req, res) => {
     const { reportNumber } = req.params;
     try {
-        const reportDetail = await prisma.report.findUnique({
+        const reportDetail = await prisma.gemReport.findUnique({
             where: { reportNumber }
         })
         if (!reportDetail) {
