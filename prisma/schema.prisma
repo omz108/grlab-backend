@@ -32,6 +32,23 @@ model Report {
 }
 
 
+model Rudraksha {
+  id           Int @id @default(autoincrement())
+  reportNumber String @unique
+  weight       String?
+  colour       String?
+  mounted      String?
+  shape        String?
+  dimension    String?
+  realFace     String?
+  artificialFace String?
+  testCameOut    String?
+  anyOtherTest String?
+  origin       String?
+  comment      String?
+}
+
+
 model Admin {
   id String @id @default(cuid())
   name String?

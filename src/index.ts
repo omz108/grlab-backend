@@ -5,11 +5,13 @@ import otpRoutes from './routes/otpRoutes';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import path from 'path';
 
 const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 dotenv.config();
 
 app.use(

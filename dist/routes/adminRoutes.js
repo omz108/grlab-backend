@@ -17,7 +17,29 @@ const database_1 = require("../config/database");
 const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const middlewares_1 = require("../middlewares");
+const multer_1 = __importDefault(require("multer"));
 const router = (0, express_1.Router)();
+// middleware multer
+const storage = multer_1.default.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        const uniqueName = `${Date.now()}-${file.originalname}`;
+        cb(null, uniqueName);
+    },
+});
+const upload = (0, multer_1.default)({
+    storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+            cb(null, true);
+        }
+        else {
+            cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
+        }
+    }
+});
 // admin-login route
 router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { username, password } = req.body;
@@ -69,6 +91,29 @@ router.get('/checkLogin', (req, res) => {
     res.status(200).json({ message: 'You are already logged in' });
     return;
 });
+router.post('/addGemRecord', upload.single('image'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
+    const reportData = req.body;
+    const reportNumber = reportData.reportNumber;
+    try {
+        const existingReport = yield database_1.prisma.report.findUnique({
+            where: { reportNumber }
+        });
+        if (existingReport) {
+            res.status(409).json({ error: `Report with Report ID: ${reportNumber} already exists` });
+            return;
+        }
+        const newReport = yield database_1.prisma.report.create({
+            data: Object.assign(Object.assign({}, reportData), { imageUrl: `/uploads/${(_a = req.file) === null || _a === void 0 ? void 0 : _a.filename}` })
+        });
+        res.status(201).json(newReport);
+        console.log(newReport);
+    }
+    catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Failed to save the report.' });
+    }
+}));
 router.post('/addRecord', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const reportData = req.body;
     const reportNumber = reportData.reportNumber;

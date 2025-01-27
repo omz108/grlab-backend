@@ -3,8 +3,37 @@ import { prisma } from "../config/database";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { authenticateAdmin } from "../middlewares";
+import multer from "multer";
 
 const router = Router();
+
+// middleware multer
+
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+
+    filename: (req, file, cb) => {
+        const uniqueName = `${Date.now()}-${file.originalname}`;
+        cb(null, uniqueName);
+    },
+});
+
+
+const upload = multer({
+    storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
+        }
+    }
+})
+
+
+
 
 // admin-login route
 router.post('/login', async (req, res) => {
@@ -65,6 +94,36 @@ router.get('/checkLogin', (req, res) => {
     res.status(200).json({message: 'You are already logged in'});
     return;
 })
+
+
+router.post('/addGemRecord', upload.single('image'), async (req, res) => {
+    const reportData = req.body;
+    const reportNumber = reportData.reportNumber;
+
+    try {
+        const existingReport = await prisma.report.findUnique({
+            where: {reportNumber}
+        })
+
+        if (existingReport) {
+            res.status(409).json({error: `Report with Report ID: ${reportNumber} already exists`});
+            return;
+        }
+
+        const newReport = await prisma.report.create({
+            data: {
+                ...reportData,
+                imageUrl: `/uploads/${req.file?.filename}`,
+            }
+        })
+        res.status(201).json(newReport);
+        // console.log(newReport);
+    } catch (err){
+        console.error(err);
+        res.status(500).json({ error: 'Failed to save the report.'});
+    }
+})
+
 
 router.post('/addRecord', async (req, res) => {
     const reportData = req.body;
