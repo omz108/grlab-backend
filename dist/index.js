@@ -50,11 +50,21 @@ app.post('/reportDetails', (req, res) => __awaiter(void 0, void 0, void 0, funct
             return;
         }
         // find report in db
-        const report = yield database_1.prisma.gemReport.findUnique({
-            where: {
-                reportNumber
-            }
-        });
+        let report;
+        if (reportNumber.startsWith('G')) {
+            report = yield database_1.prisma.gemReport.findUnique({
+                where: {
+                    reportNumber
+                }
+            });
+        }
+        else if (reportNumber.startsWith('R')) {
+            report = yield database_1.prisma.rudrakshaReport.findUnique({
+                where: {
+                    reportNumber
+                }
+            });
+        }
         if (!report) {
             // console.log("Report not found, Please enter valid Report Number");
             res.status(404).json({ error: "Report not found, Please enter valid Report Number" });

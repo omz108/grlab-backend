@@ -98,21 +98,27 @@ router.get('/checkLogin', (req, res) => {
 
 router.post('/addGemRecord', upload.single('image'), async (req, res) => {
     const reportData = req.body;
-    const reportNumber = reportData.reportNumber;
 
     try {
-        const existingReport = await prisma.gemReport.findUnique({
-            where: {reportNumber}
+        const latestGemReport = await prisma.gemReport.findFirst({
+            select: {
+                reportNumber: true
+            }, 
+            orderBy: {
+                id: 'desc'
+            }
         })
+        
+        const lastNumber = latestGemReport
+        ? parseInt(latestGemReport.reportNumber.slice(1), 10)
+        : 10000
 
-        if (existingReport) {
-            res.status(409).json({error: `Report with Report ID: ${reportNumber} already exists`});
-            return;
-        }
+        const newReportNumber = `G${lastNumber + 1}`;
 
         const newReport = await prisma.gemReport.create({
             data: {
                 ...reportData,
+                reportNumber: newReportNumber,
                 imageUrl: `/uploads/${req.file?.filename}`,
             }
         })
@@ -120,38 +126,87 @@ router.post('/addGemRecord', upload.single('image'), async (req, res) => {
         return;
         // console.log(newReport);
     } catch (err){
-        // console.log(err);
+        console.log(err);
         console.error(err);
         res.status(500).json({ error: 'Failed to save the report.'});
         return;
     }
 })
 
-
-router.post('/addRecord', async (req, res) => {
+router.post('/addRudraksha', upload.single('image'), async (req, res) => {
     const reportData = req.body;
-    const reportNumber = reportData.reportNumber;
+
     try {
-        const existingReport = await prisma.gemReport.findUnique({where: { reportNumber }});
-        if (existingReport) {
-            res.status(409).json({error: `Report with Report ID: ${ reportNumber } already exists`});
-            return;
-        }
-        const newReport = await prisma.gemReport.create({
-            data: reportData
+        const latestRudrakshaReport = await prisma.rudrakshaReport.findFirst({
+            select: { reportNumber: true },
+            orderBy: { id: 'desc' }
+        })
+
+        const lastNumber = latestRudrakshaReport
+        ? parseInt(latestRudrakshaReport.reportNumber.slice(1), 10)
+        : 10000
+
+        const newReportNumber = `R${lastNumber + 1}`;
+
+        const newReport = await prisma.rudrakshaReport.create({
+            data: {
+                ...reportData,
+                reportNumber: newReportNumber,
+                imageUrl: `/uploads/${req.file?.filename}`,
+            }
         })
         res.status(201).json(newReport);
         return;
-    } catch(err) {
+        // console.log(newReport);
+    } catch (err){
         console.log(err);
-        res.status(500).json({error: 'Failed to save the report.'});
+        console.error(err);
+        res.status(500).json({ error: 'Failed to save the report.'});
         return;
     }
 })
 
-router.get('/fetchAllReports', async (req, res) => {
+// router.post('/addRecord', async (req, res) => {
+//     const reportData = req.body;
+//     const reportNumber = reportData.reportNumber;
+//     try {
+//         const existingReport = await prisma.gemReport.findUnique({where: { reportNumber }});
+//         if (existingReport) {
+//             res.status(409).json({error: `Report with Report ID: ${ reportNumber } already exists`});
+//             return;
+//         }
+//         const newReport = await prisma.gemReport.create({
+//             data: reportData
+//         })
+//         res.status(201).json(newReport);
+//         return;
+//     } catch(err) {
+//         console.log(err);
+//         res.status(500).json({error: 'Failed to save the report.'});
+//         return;
+//     }
+// })
+
+router.get('/fetchAllGems', async (req, res) => {
     try {
         const reports = await prisma.gemReport.findMany({
+            select: {
+                reportNumber: true
+            }, orderBy: {
+                id: 'desc'
+            }
+        })
+        res.status(200).json(reports);
+        return;
+    } catch(err) {
+        res.status(500).json({error: 'Failed to fetch reports'})
+        return;
+    } 
+})
+
+router.get('/fetchAllRudraksha', async (req, res) => {
+    try {
+        const reports = await prisma.rudrakshaReport.findMany({
             select: {
                 reportNumber: true
             }, orderBy: {
@@ -170,10 +225,19 @@ router.put('/report/:reportNumber', async (req, res) => {
     const { reportNumber } = req.params;
     const updatedData = req.body;
     try {
-        const updatedReport = await prisma.gemReport.update({
-            where: { reportNumber },
-            data: updatedData
-        });
+        let updatedReport;
+        if (reportNumber.startsWith('G')) {
+            updatedReport = await prisma.gemReport.update({
+                where: { reportNumber },
+                data: updatedData
+            });
+        } else if (reportNumber.startsWith('R')) {
+            updatedReport = await prisma.rudrakshaReport.update({
+                where: { reportNumber },
+                data: updatedData
+            });
+        }
+        
         res.status(200).json({ message: 'Report updated successfully', updatedReport });
         return;
     } catch(err: any) {
@@ -189,9 +253,16 @@ router.put('/report/:reportNumber', async (req, res) => {
 router.delete('/report/:reportNumber', async (req, res) => {
     const { reportNumber } = req.params;
     try {
-        await prisma.gemReport.delete({
-            where: { reportNumber }
-        });
+        if (reportNumber.startsWith('G')) {
+            await prisma.gemReport.delete({
+                where: { reportNumber }
+            });
+        } else if (reportNumber.startsWith('R')) {
+            await prisma.rudrakshaReport.delete({
+                where: { reportNumber }
+            });
+        }
+        
         res.status(200).json({ message: 'Report deleted successfully' });
         return;
     } catch(err:any) {
@@ -207,9 +278,17 @@ router.delete('/report/:reportNumber', async (req, res) => {
 router.get('/reportDetail/:reportNumber', async (req, res) => {
     const { reportNumber } = req.params;
     try {
-        const reportDetail = await prisma.gemReport.findUnique({
-            where: { reportNumber }
-        })
+        let reportDetail;
+        if (reportNumber.startsWith('G')) {
+            reportDetail = await prisma.gemReport.findUnique({
+                where: { reportNumber }
+            })
+        } else if (reportNumber.startsWith('R')) {
+            reportDetail = await prisma.rudrakshaReport.findUnique({
+                where: { reportNumber }
+            })
+        }
+        
         if (!reportDetail) {
             res.status(404).json({error: 'Report not found, Please enter a valid report number'});
             return;

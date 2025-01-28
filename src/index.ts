@@ -49,11 +49,21 @@ app.post('/reportDetails', async (req, res) => {
         }
 
         // find report in db
-        const report = await prisma.gemReport.findUnique({
-            where: {
-                reportNumber
-            }
-        })
+        let report;
+
+        if(reportNumber.startsWith('G')) {
+            report = await prisma.gemReport.findUnique({
+                where: {
+                    reportNumber
+                }
+            })
+        } else if (reportNumber.startsWith('R')) {
+            report = await prisma.rudrakshaReport.findUnique({
+                where: {
+                    reportNumber
+                }
+            })
+        }
 
         if (!report) {
             // console.log("Report not found, Please enter valid Report Number");

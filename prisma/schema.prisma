@@ -28,7 +28,6 @@ model GemReport {
   specificGravity String?
   magnification String?
   remarks String?
-  origin String?
   imageUrl String?
 }
 
@@ -47,6 +46,7 @@ model RudrakshaReport {
   xRayResult       String?
   origin           String?
   comment          String?
+  imageUrl         String?
 }
 
 
