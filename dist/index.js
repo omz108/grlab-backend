@@ -50,7 +50,7 @@ app.post('/reportDetails', (req, res) => __awaiter(void 0, void 0, void 0, funct
             return;
         }
         // find report in db
-        const report = yield database_1.prisma.report.findUnique({
+        const report = yield database_1.prisma.gemReport.findUnique({
             where: {
                 reportNumber
             }

@@ -117,10 +117,13 @@ router.post('/addGemRecord', upload.single('image'), async (req, res) => {
             }
         })
         res.status(201).json(newReport);
+        return;
         // console.log(newReport);
     } catch (err){
+        // console.log(err);
         console.error(err);
         res.status(500).json({ error: 'Failed to save the report.'});
+        return;
     }
 })
 

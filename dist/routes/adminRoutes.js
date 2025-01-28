@@ -96,34 +96,37 @@ router.post('/addGemRecord', upload.single('image'), (req, res) => __awaiter(voi
     const reportData = req.body;
     const reportNumber = reportData.reportNumber;
     try {
-        const existingReport = yield database_1.prisma.report.findUnique({
+        const existingReport = yield database_1.prisma.gemReport.findUnique({
             where: { reportNumber }
         });
         if (existingReport) {
             res.status(409).json({ error: `Report with Report ID: ${reportNumber} already exists` });
             return;
         }
-        const newReport = yield database_1.prisma.report.create({
+        const newReport = yield database_1.prisma.gemReport.create({
             data: Object.assign(Object.assign({}, reportData), { imageUrl: `/uploads/${(_a = req.file) === null || _a === void 0 ? void 0 : _a.filename}` })
         });
         res.status(201).json(newReport);
-        console.log(newReport);
+        return;
+        // console.log(newReport);
     }
     catch (err) {
+        console.log(err);
         console.error(err);
         res.status(500).json({ error: 'Failed to save the report.' });
+        return;
     }
 }));
 router.post('/addRecord', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const reportData = req.body;
     const reportNumber = reportData.reportNumber;
     try {
-        const existingReport = yield database_1.prisma.report.findUnique({ where: { reportNumber } });
+        const existingReport = yield database_1.prisma.gemReport.findUnique({ where: { reportNumber } });
         if (existingReport) {
             res.status(409).json({ error: `Report with Report ID: ${reportNumber} already exists` });
             return;
         }
-        const newReport = yield database_1.prisma.report.create({
+        const newReport = yield database_1.prisma.gemReport.create({
             data: reportData
         });
         res.status(201).json(newReport);
@@ -137,7 +140,7 @@ router.post('/addRecord', (req, res) => __awaiter(void 0, void 0, void 0, functi
 }));
 router.get('/fetchAllReports', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const reports = yield database_1.prisma.report.findMany({
+        const reports = yield database_1.prisma.gemReport.findMany({
             select: {
                 reportNumber: true
             }, orderBy: {
@@ -156,7 +159,7 @@ router.put('/report/:reportNumber', (req, res) => __awaiter(void 0, void 0, void
     const { reportNumber } = req.params;
     const updatedData = req.body;
     try {
-        const updatedReport = yield database_1.prisma.report.update({
+        const updatedReport = yield database_1.prisma.gemReport.update({
             where: { reportNumber },
             data: updatedData
         });
@@ -175,7 +178,7 @@ router.put('/report/:reportNumber', (req, res) => __awaiter(void 0, void 0, void
 router.delete('/report/:reportNumber', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { reportNumber } = req.params;
     try {
-        yield database_1.prisma.report.delete({
+        yield database_1.prisma.gemReport.delete({
             where: { reportNumber }
         });
         res.status(200).json({ message: 'Report deleted successfully' });
@@ -193,7 +196,7 @@ router.delete('/report/:reportNumber', (req, res) => __awaiter(void 0, void 0, v
 router.get('/reportDetail/:reportNumber', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { reportNumber } = req.params;
     try {
-        const reportDetail = yield database_1.prisma.report.findUnique({
+        const reportDetail = yield database_1.prisma.gemReport.findUnique({
             where: { reportNumber }
         });
         if (!reportDetail) {

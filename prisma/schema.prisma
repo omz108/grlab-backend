@@ -28,6 +28,7 @@ model GemReport {
   specificGravity String?
   magnification String?
   remarks String?
+  origin String?
   imageUrl String?
 }
 
