@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { authenticateAdmin } from "../middlewares";
 import multer from "multer";
+import * as XLSX from 'xlsx';
 
 const router = Router();
 
@@ -32,7 +33,9 @@ const upload = multer({
     }
 })
 
-
+// middleware for excelfile
+const excelStorage = multer.memoryStorage();
+const uploadExcel = multer({ storage: excelStorage })
 
 
 // admin-login route
@@ -162,6 +165,53 @@ router.post('/addRudraksha', upload.single('image'), async (req, res) => {
         console.log(err);
         console.error(err);
         res.status(500).json({ error: 'Failed to save the report.'});
+        return;
+    }
+})
+
+router.post('/uploadExcel', uploadExcel.single("file"), async (req, res) => {
+    try {
+        if(!req.file) {
+            res.status(400).json({error: "No file uploaded"});
+            return;
+        }
+        const { reportType } = req.body;
+        if (!["gem", "rudraksha"].includes(reportType)) {
+            res.status(400).json({ error: "Invalid report type" });
+            return;
+        }
+
+        // read the excel file from buffer
+        const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+        const sheetName = workbook.SheetNames[0];
+        const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+        if (!Array.isArray(data) || data.length === 0) {
+            res.status(400).json({error: "Empty or Invalid Excel file"})
+        }
+
+        const reportNumberPrefix = reportType === "gem"? "G":"R";
+        const lastRecord = await (prisma as any)[`${reportType}Report`].findFirst({
+            select: { reportNumber: true},
+            orderBy: { id: "desc" }
+        })
+        let lastNumber = lastRecord ? parseInt(lastRecord.reportNumber.slice(1), 10): 10000;
+
+        for( const row of data) {
+            lastNumber++;
+            const newReportNumber = `${reportNumberPrefix}${lastNumber}`;
+
+            await (prisma as any)[`${reportType}Report`].create({
+                data: {
+                    reportNumber: newReportNumber,
+                    ...(row as Record<string, any>),
+                }
+            })
+        }
+        res.json({message: "Report added successfully"});
+        return;
+    } catch(err) {
+        res.status(500).json({error: "Error processing file"});
         return;
     }
 })
