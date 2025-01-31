@@ -1,4 +1,27 @@
 "use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -18,6 +41,7 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const middlewares_1 = require("../middlewares");
 const multer_1 = __importDefault(require("multer"));
+const XLSX = __importStar(require("xlsx"));
 const router = (0, express_1.Router)();
 // middleware multer
 const storage = multer_1.default.diskStorage({
@@ -40,6 +64,9 @@ const upload = (0, multer_1.default)({
         }
     }
 });
+// middleware for excelfile
+const excelStorage = multer_1.default.memoryStorage();
+const uploadExcel = (0, multer_1.default)({ storage: excelStorage });
 // admin-login route
 router.post('/login', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { username, password } = req.body;
@@ -144,6 +171,46 @@ router.post('/addRudraksha', upload.single('image'), (req, res) => __awaiter(voi
         console.log(err);
         console.error(err);
         res.status(500).json({ error: 'Failed to save the report.' });
+        return;
+    }
+}));
+router.post('/uploadExcel', uploadExcel.single("file"), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        if (!req.file) {
+            res.status(400).json({ error: "No file uploaded" });
+            return;
+        }
+        const { reportType } = req.body;
+        if (!["gem", "rudraksha"].includes(reportType)) {
+            res.status(400).json({ error: "Invalid report type" });
+            return;
+        }
+        // read the excel file from buffer
+        const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+        const sheetName = workbook.SheetNames[0];
+        const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+        if (!Array.isArray(data) || data.length === 0) {
+            res.status(400).json({ error: "Empty or Invalid Excel file" });
+        }
+        const reportNumberPrefix = reportType === "gem" ? "G" : "R";
+        const lastRecord = yield database_1.prisma[`${reportType}Report`].findFirst({
+            select: { reportNumber: true },
+            orderBy: { id: "desc" }
+        });
+        let lastNumber = lastRecord ? parseInt(lastRecord.reportNumber.slice(1), 10) : 10000;
+        for (const row of data) {
+            lastNumber++;
+            const newReportNumber = `${reportNumberPrefix}${lastNumber}`;
+            yield database_1.prisma[`${reportType}Report`].create({
+                data: Object.assign({ reportNumber: newReportNumber }, row)
+            });
+        }
+        res.json({ message: "Report added successfully" });
+        return;
+    }
+    catch (err) {
+        console.log(err);
+        res.status(500).json({ error: "Error processing file" });
         return;
     }
 }));

@@ -211,6 +211,7 @@ router.post('/uploadExcel', uploadExcel.single("file"), async (req, res) => {
         res.json({message: "Report added successfully"});
         return;
     } catch(err) {
+        // console.log(err);
         res.status(500).json({error: "Error processing file"});
         return;
     }
