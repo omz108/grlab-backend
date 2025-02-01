@@ -272,7 +272,8 @@ router.get('/fetchAllRudraksha', async (req, res) => {
     } 
 })
 
-router.put('/report/:reportNumber', async (req, res) => {
+// Put request route
+router.put('/report/:reportNumber', upload.single('image'), async (req, res) => {
     const { reportNumber } = req.params;
     const updatedData = req.body;
     try {
@@ -280,18 +281,25 @@ router.put('/report/:reportNumber', async (req, res) => {
         if (reportNumber.startsWith('G')) {
             updatedReport = await prisma.gemReport.update({
                 where: { reportNumber },
-                data: updatedData
+                data: {
+                    ...updatedData,
+                    imageUrl: `/uploads/${req.file?.filename}`
+                }
             });
         } else if (reportNumber.startsWith('R')) {
             updatedReport = await prisma.rudrakshaReport.update({
                 where: { reportNumber },
-                data: updatedData
+                data: {
+                    ...updatedData,
+                    imageUrl: `/uploads/${req.file?.filename}`
+                }
             });
         }
         
         res.status(200).json({ message: 'Report updated successfully', updatedReport });
         return;
     } catch(err: any) {
+        // console.log(err);
         if (err.code === 'P2025') {
             res.status(404).json({ error: 'Report not found' });
             return;

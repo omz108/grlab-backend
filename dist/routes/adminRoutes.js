@@ -209,7 +209,7 @@ router.post('/uploadExcel', uploadExcel.single("file"), (req, res) => __awaiter(
         return;
     }
     catch (err) {
-        console.log(err);
+        // console.log(err);
         res.status(500).json({ error: "Error processing file" });
         return;
     }
@@ -268,7 +268,9 @@ router.get('/fetchAllRudraksha', (req, res) => __awaiter(void 0, void 0, void 0,
         return;
     }
 }));
-router.put('/report/:reportNumber', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+// Put request route
+router.put('/report/:reportNumber', upload.single('image'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _c, _d;
     const { reportNumber } = req.params;
     const updatedData = req.body;
     try {
@@ -276,19 +278,20 @@ router.put('/report/:reportNumber', (req, res) => __awaiter(void 0, void 0, void
         if (reportNumber.startsWith('G')) {
             updatedReport = yield database_1.prisma.gemReport.update({
                 where: { reportNumber },
-                data: updatedData
+                data: Object.assign(Object.assign({}, updatedData), { imageUrl: `/uploads/${(_c = req.file) === null || _c === void 0 ? void 0 : _c.filename}` })
             });
         }
         else if (reportNumber.startsWith('R')) {
             updatedReport = yield database_1.prisma.rudrakshaReport.update({
                 where: { reportNumber },
-                data: updatedData
+                data: Object.assign(Object.assign({}, updatedData), { imageUrl: `/uploads/${(_d = req.file) === null || _d === void 0 ? void 0 : _d.filename}` })
             });
         }
         res.status(200).json({ message: 'Report updated successfully', updatedReport });
         return;
     }
     catch (err) {
+        // console.log(err);
         if (err.code === 'P2025') {
             res.status(404).json({ error: 'Report not found' });
             return;
