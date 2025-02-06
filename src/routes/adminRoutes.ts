@@ -217,27 +217,6 @@ router.post('/uploadExcel', uploadExcel.single("file"), async (req, res) => {
     }
 })
 
-// router.post('/addRecord', async (req, res) => {
-//     const reportData = req.body;
-//     const reportNumber = reportData.reportNumber;
-//     try {
-//         const existingReport = await prisma.gemReport.findUnique({where: { reportNumber }});
-//         if (existingReport) {
-//             res.status(409).json({error: `Report with Report ID: ${ reportNumber } already exists`});
-//             return;
-//         }
-//         const newReport = await prisma.gemReport.create({
-//             data: reportData
-//         })
-//         res.status(201).json(newReport);
-//         return;
-//     } catch(err) {
-//         console.log(err);
-//         res.status(500).json({error: 'Failed to save the report.'});
-//         return;
-//     }
-// })
-
 router.get('/fetchAllGems', async (req, res) => {
     try {
         const reports = await prisma.gemReport.findMany({

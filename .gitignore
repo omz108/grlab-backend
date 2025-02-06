@@ -1,3 +1,4 @@
 node_modules
 # Keep environment variables out of version control
 .env
+uparkom-grlab-firebase-adminsdk-fbsvc-d637029fb3.json
