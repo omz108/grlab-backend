@@ -14,66 +14,74 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const twilio_1 = __importDefault(require("twilio"));
-const database_1 = require("../config/database");
 const router = (0, express_1.Router)();
 const accountSid = process.env.TWILIO_ACCOUNT_SID;
 const authToken = process.env.TWILIO_AUTH_TOKEN;
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER;
+const serviceSid = process.env.TWILIO_SERVICE_SID;
+if (!accountSid || !authToken || !serviceSid) {
+    throw new Error("Twilio credentials or service SID are missing.");
+}
 const client = (0, twilio_1.default)(accountSid, authToken);
 //  function to generate otp
-function generateOTP() {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-}
+// function generateOTP(): string {
+//     return Math.floor(100000 + Math.random() * 900000).toString();
+// }
 // function to send OTP
-function sendOTP(mobileNumber, otp) {
-    return __awaiter(this, void 0, void 0, function* () {
-        yield client.messages.create({
-            body: `Your verification code is ${otp}`,
-            from: twilioPhoneNumber,
-            to: mobileNumber
-        });
-    });
-}
+// async function sendOTP(mobileNumber:string, otp: string): Promise<void> {
+//     await client.messages.create({
+//         body: `Your verification code is ${otp}`,
+//         from: twilioPhoneNumber,
+//         to: mobileNumber
+//     })
+// }
 router.post('/generate', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { mobileNumber } = req.body;
     if (!mobileNumber) {
         res.status(400).json({ error: 'Mobile number is required' });
         return;
     }
-    const otp = generateOTP();
-    const expiry = new Date(Date.now() + 5 * 60 * 1000).toISOString();
     try {
-        const existingRecord = yield database_1.prisma.oTP.findUnique({
-            where: { mobileNumber }
-        });
-        if (existingRecord) {
-            yield database_1.prisma.oTP.update({
-                where: {
-                    mobileNumber
-                }, data: {
-                    otp,
-                    expiry
-                }
-            });
-        }
-        else {
-            yield database_1.prisma.oTP.create({
-                data: {
-                    mobileNumber,
-                    otp,
-                    expiry
-                }
-            });
-        }
-        // Send OTP via SMS
-        yield sendOTP(mobileNumber, otp);
+        const verification = yield client.verify.v2.services(serviceSid)
+            .verifications
+            .create({ to: mobileNumber, channel: 'sms' });
         res.status(200).json({ message: 'OTP sent successfully' });
-        return;
     }
-    catch (error) {
-        console.log('error while sending: ', error);
-        res.json({ error: 'Failed to send OTP' });
-        return;
+    catch (err) {
+        console.log('Error sending OTP: ', err);
+        res.status(500).json({ error: 'Failed to send OTP' });
     }
+    // const otp = generateOTP();
+    // const expiry = new Date(Date.now() + 5 * 60 * 1000).toISOString();
+    //     try {
+    //         const existingRecord = await prisma.oTP.findUnique({
+    //             where: { mobileNumber }
+    //         })
+    //         if ( existingRecord ) {
+    //         await prisma.oTP.update({
+    //             where: {
+    //                 mobileNumber
+    //             }, data: {
+    //                 otp,
+    //                 expiry
+    //             }
+    //         })
+    //         } else {
+    //             await prisma.oTP.create({
+    //                 data: {
+    //                     mobileNumber,
+    //                     otp,
+    //                     expiry
+    //                 }
+    //             })
+    //         }
+    //         // Send OTP via SMS
+    //         await sendOTP(mobileNumber, otp);
+    //         res.status(200).json({ message: 'OTP sent successfully' });
+    //         return;
+    //     } catch (error) {
+    //         console.log('error while sending: ',error);
+    //         res.json({error: 'Failed to send OTP'});
+    //         return;
+    //     }
 }));
 exports.default = router;

@@ -20,11 +20,19 @@ const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const path_1 = __importDefault(require("path"));
+const twilio_1 = __importDefault(require("twilio"));
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '..', 'uploads')));
 dotenv_1.default.config();
+const accountSid = process.env.TWILIO_ACCOUNT_SID;
+const authToken = process.env.TWILIO_AUTH_TOKEN;
+const serviceSid = process.env.TWILIO_SERVICE_SID;
+if (!accountSid || !authToken || !serviceSid) {
+    throw new Error("Twilio credentials or service SID are missing.");
+}
+const client = (0, twilio_1.default)(accountSid, authToken);
 app.use((0, cors_1.default)({
     origin: 'http://localhost:5173',
     credentials: true, // Allow cookies to be sent
@@ -40,15 +48,22 @@ app.post('/reportDetails', (req, res) => __awaiter(void 0, void 0, void 0, funct
     }
     try {
         // verify otp
-        const record = yield database_1.prisma.oTP.findUnique({
-            where: {
-                mobileNumber
-            }
-        });
-        if (!record || record.otp !== otp || new Date().toISOString() > (record === null || record === void 0 ? void 0 : record.expiry)) {
+        const verificationCheck = yield client.verify.v2.services(serviceSid)
+            .verificationChecks
+            .create({ to: mobileNumber, code: otp });
+        if (!verificationCheck.valid) {
             res.status(400).json({ error: 'Invalid or expired OTP' });
             return;
         }
+        // const record = await prisma.oTP.findUnique({
+        //     where: {
+        //         mobileNumber
+        //     }
+        // })
+        // if (!record || record.otp !== otp || new Date().toISOString() > record?.expiry) {
+        //     res.status(400).json({error: 'Invalid or expired OTP'});
+        //     return;
+        // }
         // find report in db
         let report;
         if (reportNumber.startsWith('G')) {
@@ -74,7 +89,8 @@ app.post('/reportDetails', (req, res) => __awaiter(void 0, void 0, void 0, funct
         return;
     }
     catch (error) {
-        // console.log("errrror ho gya re baba");
+        console.log("errrror ho gya re baba");
+        console.log(error);
         res.status(500).json({ error: "An error occured" });
         return;
     }
