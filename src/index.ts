@@ -38,22 +38,22 @@ app.use(
 // })
 
 app.post('/reportDetails', async (req, res) => {
-    const { reportNumber, mobileNumber, otp } = req.body;
+    const { reportNumber } = req.body;
 
-    if (!reportNumber || !mobileNumber || !otp) {
-        res.status(400).json({ error: "All fields are required!"});
+    if (!reportNumber ) {
+        res.status(400).json({ error: "Report number is required!"});
         return;
     }
 
     try {
         // verify otp
-        const verificationCheck = await client.verify.v2.services(serviceSid)
-        .verificationChecks
-        .create({ to: mobileNumber, code: otp});
-        if(!verificationCheck.valid) {
-            res.status(400).json({ error: 'Invalid or expired OTP' });
-            return;
-        }
+        // const verificationCheck = await client.verify.v2.services(serviceSid)
+        // .verificationChecks
+        // .create({ to: mobileNumber, code: otp});
+        // if(!verificationCheck.valid) {
+        //     res.status(400).json({ error: 'Invalid or expired OTP' });
+        //     return;
+        // }
         // const record = await prisma.oTP.findUnique({
         //     where: {
         //         mobileNumber
