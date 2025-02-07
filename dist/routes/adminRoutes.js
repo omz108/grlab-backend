@@ -42,28 +42,30 @@ const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const middlewares_1 = require("../middlewares");
 const multer_1 = __importDefault(require("multer"));
 const XLSX = __importStar(require("xlsx"));
+const firebaseConfig_1 = require("../config/firebaseConfig");
 const router = (0, express_1.Router)();
 // middleware multer
-const storage = multer_1.default.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
-    filename: (req, file, cb) => {
-        const uniqueName = `${Date.now()}-${file.originalname}`;
-        cb(null, uniqueName);
-    },
-});
-const upload = (0, multer_1.default)({
-    storage,
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-            cb(null, true);
-        }
-        else {
-            cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
-        }
-    }
-});
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         cb(null, 'uploads/');
+//     },
+//     filename: (req, file, cb) => {
+//         const uniqueName = `${Date.now()}-${file.originalname}`;
+//         cb(null, uniqueName);
+//     },
+// });
+// const upload = multer({
+//     storage,
+//     fileFilter: (req, file, cb) => {
+//         if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+//             cb(null, true);
+//         } else {
+//             cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
+//         }
+//     }
+// })
+const storage = multer_1.default.memoryStorage();
+const upload = (0, multer_1.default)({ storage });
 // middleware for excelfile
 const excelStorage = multer_1.default.memoryStorage();
 const uploadExcel = (0, multer_1.default)({ storage: excelStorage });
@@ -119,9 +121,19 @@ router.get('/checkLogin', (req, res) => {
     return;
 });
 router.post('/addGemRecord', upload.single('image'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _a;
     const reportData = req.body;
     try {
+        // generate unique filename
+        let publicUrl;
+        if (req.file) {
+            const uniqueFileName = `gem/${Date.now()}-${req.file.originalname}`;
+            const file = firebaseConfig_1.bucket.file(uniqueFileName);
+            yield file.save(req.file.buffer, {
+                metadata: { contentType: req.file.mimetype },
+            });
+            yield file.makePublic();
+            publicUrl = `https://storage.googleapis.com/${firebaseConfig_1.bucket.name}/${uniqueFileName}`;
+        }
         const latestGemReport = yield database_1.prisma.gemReport.findFirst({
             select: {
                 reportNumber: true
@@ -135,7 +147,7 @@ router.post('/addGemRecord', upload.single('image'), (req, res) => __awaiter(voi
             : 10000;
         const newReportNumber = `G${lastNumber + 1}`;
         const newReport = yield database_1.prisma.gemReport.create({
-            data: Object.assign(Object.assign({}, reportData), { reportNumber: newReportNumber, imageUrl: `/uploads/${(_a = req.file) === null || _a === void 0 ? void 0 : _a.filename}` })
+            data: Object.assign(Object.assign({}, reportData), { reportNumber: newReportNumber, imageUrl: publicUrl })
         });
         res.status(201).json(newReport);
         return;
@@ -149,9 +161,18 @@ router.post('/addGemRecord', upload.single('image'), (req, res) => __awaiter(voi
     }
 }));
 router.post('/addRudraksha', upload.single('image'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _b;
     const reportData = req.body;
     try {
+        let publicUrl;
+        if (req.file) {
+            const uniqueFileName = `rudraksha/${Date.now()}-${req.file.originalname}`;
+            const file = firebaseConfig_1.bucket.file(uniqueFileName);
+            yield file.save(req.file.buffer, {
+                metadata: { contentType: req.file.mimetype },
+            });
+            yield file.makePublic();
+            publicUrl = `https://storage.googleapis.com/${firebaseConfig_1.bucket.name}/${uniqueFileName}`;
+        }
         const latestRudrakshaReport = yield database_1.prisma.rudrakshaReport.findFirst({
             select: { reportNumber: true },
             orderBy: { id: 'desc' }
@@ -161,7 +182,7 @@ router.post('/addRudraksha', upload.single('image'), (req, res) => __awaiter(voi
             : 10000;
         const newReportNumber = `R${lastNumber + 1}`;
         const newReport = yield database_1.prisma.rudrakshaReport.create({
-            data: Object.assign(Object.assign({}, reportData), { reportNumber: newReportNumber, imageUrl: `/uploads/${(_b = req.file) === null || _b === void 0 ? void 0 : _b.filename}` })
+            data: Object.assign(Object.assign({}, reportData), { reportNumber: newReportNumber, imageUrl: publicUrl })
         });
         res.status(201).json(newReport);
         return;
@@ -191,6 +212,7 @@ router.post('/uploadExcel', uploadExcel.single("file"), (req, res) => __awaiter(
         const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
         if (!Array.isArray(data) || data.length === 0) {
             res.status(400).json({ error: "Empty or Invalid Excel file" });
+            return;
         }
         const reportNumberPrefix = reportType === "gem" ? "G" : "R";
         const lastRecord = yield database_1.prisma[`${reportType}Report`].findFirst({
@@ -214,26 +236,6 @@ router.post('/uploadExcel', uploadExcel.single("file"), (req, res) => __awaiter(
         return;
     }
 }));
-// router.post('/addRecord', async (req, res) => {
-//     const reportData = req.body;
-//     const reportNumber = reportData.reportNumber;
-//     try {
-//         const existingReport = await prisma.gemReport.findUnique({where: { reportNumber }});
-//         if (existingReport) {
-//             res.status(409).json({error: `Report with Report ID: ${ reportNumber } already exists`});
-//             return;
-//         }
-//         const newReport = await prisma.gemReport.create({
-//             data: reportData
-//         })
-//         res.status(201).json(newReport);
-//         return;
-//     } catch(err) {
-//         console.log(err);
-//         res.status(500).json({error: 'Failed to save the report.'});
-//         return;
-//     }
-// })
 router.get('/fetchAllGems', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const reports = yield database_1.prisma.gemReport.findMany({
@@ -270,21 +272,36 @@ router.get('/fetchAllRudraksha', (req, res) => __awaiter(void 0, void 0, void 0,
 }));
 // Put request route
 router.put('/report/:reportNumber', upload.single('image'), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    var _c, _d;
     const { reportNumber } = req.params;
     const updatedData = req.body;
+    let publicUrl;
     try {
+        if (req.file) {
+            try {
+                const uniqueFileName = `reports/${Date.now()}-${req.file.originalname}`;
+                const file = firebaseConfig_1.bucket.file(uniqueFileName);
+                yield file.save(req.file.buffer, {
+                    metadata: { contentType: req.file.mimetype },
+                });
+                yield file.makePublic();
+                publicUrl = `https://storage.googleapis.com/${firebaseConfig_1.bucket.name}/${uniqueFileName}`;
+            }
+            catch (uploadErr) {
+                res.status(500).json({ error: "Failed to upload image" });
+                return;
+            }
+        }
         let updatedReport;
         if (reportNumber.startsWith('G')) {
             updatedReport = yield database_1.prisma.gemReport.update({
                 where: { reportNumber },
-                data: Object.assign(Object.assign({}, updatedData), { imageUrl: `/uploads/${(_c = req.file) === null || _c === void 0 ? void 0 : _c.filename}` })
+                data: Object.assign(Object.assign({}, updatedData), (publicUrl ? { imageUrl: publicUrl } : {}))
             });
         }
         else if (reportNumber.startsWith('R')) {
             updatedReport = yield database_1.prisma.rudrakshaReport.update({
                 where: { reportNumber },
-                data: Object.assign(Object.assign({}, updatedData), { imageUrl: `/uploads/${(_d = req.file) === null || _d === void 0 ? void 0 : _d.filename}` })
+                data: Object.assign(Object.assign({}, updatedData), (publicUrl ? { imageUrl: publicUrl } : {}))
             });
         }
         res.status(200).json({ message: 'Report updated successfully', updatedReport });

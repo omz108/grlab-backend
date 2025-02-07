@@ -5,33 +5,37 @@ import jwt from 'jsonwebtoken';
 import { authenticateAdmin } from "../middlewares";
 import multer from "multer";
 import * as XLSX from 'xlsx';
+import { bucket } from "../config/firebaseConfig";
 
 const router = Router();
 
 // middleware multer
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, 'uploads/');
-    },
+// const storage = multer.diskStorage({
+//     destination: (req, file, cb) => {
+//         cb(null, 'uploads/');
+//     },
 
-    filename: (req, file, cb) => {
-        const uniqueName = `${Date.now()}-${file.originalname}`;
-        cb(null, uniqueName);
-    },
-});
+//     filename: (req, file, cb) => {
+//         const uniqueName = `${Date.now()}-${file.originalname}`;
+//         cb(null, uniqueName);
+//     },
+// });
 
 
-const upload = multer({
-    storage,
-    fileFilter: (req, file, cb) => {
-        if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-            cb(null, true);
-        } else {
-            cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
-        }
-    }
-})
+// const upload = multer({
+//     storage,
+//     fileFilter: (req, file, cb) => {
+//         if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+//             cb(null, true);
+//         } else {
+//             cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
+//         }
+//     }
+// })
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage })
 
 // middleware for excelfile
 const excelStorage = multer.memoryStorage();
@@ -103,6 +107,21 @@ router.post('/addGemRecord', upload.single('image'), async (req, res) => {
     const reportData = req.body;
 
     try {
+        // generate unique filename
+        let publicUrl;
+        if (req.file) {
+            const uniqueFileName = `gem/${Date.now()}-${req.file.originalname}`;
+            const file = bucket.file(uniqueFileName);
+
+            await file.save(req.file.buffer, {
+                metadata: { contentType: req.file.mimetype },
+            });
+
+            await file.makePublic();
+
+            publicUrl = `https://storage.googleapis.com/${bucket.name}/${uniqueFileName}`;
+        }
+        
         const latestGemReport = await prisma.gemReport.findFirst({
             select: {
                 reportNumber: true
@@ -122,7 +141,7 @@ router.post('/addGemRecord', upload.single('image'), async (req, res) => {
             data: {
                 ...reportData,
                 reportNumber: newReportNumber,
-                imageUrl: `/uploads/${req.file?.filename}`,
+                imageUrl: publicUrl,
             }
         })
         res.status(201).json(newReport);
@@ -140,6 +159,19 @@ router.post('/addRudraksha', upload.single('image'), async (req, res) => {
     const reportData = req.body;
 
     try {
+        let publicUrl;
+        if (req.file) {
+            const uniqueFileName = `rudraksha/${Date.now()}-${req.file.originalname}`;
+            const file = bucket.file(uniqueFileName);
+
+            await file.save(req.file.buffer, {
+            metadata: { contentType: req.file.mimetype },
+            });
+
+            await file.makePublic();
+
+            publicUrl = `https://storage.googleapis.com/${bucket.name}/${uniqueFileName}`;
+        }
         const latestRudrakshaReport = await prisma.rudrakshaReport.findFirst({
             select: { reportNumber: true },
             orderBy: { id: 'desc' }
@@ -155,7 +187,7 @@ router.post('/addRudraksha', upload.single('image'), async (req, res) => {
             data: {
                 ...reportData,
                 reportNumber: newReportNumber,
-                imageUrl: `/uploads/${req.file?.filename}`,
+                imageUrl: publicUrl,
             }
         })
         res.status(201).json(newReport);
@@ -187,7 +219,8 @@ router.post('/uploadExcel', uploadExcel.single("file"), async (req, res) => {
         const data = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
         if (!Array.isArray(data) || data.length === 0) {
-            res.status(400).json({error: "Empty or Invalid Excel file"})
+            res.status(400).json({error: "Empty or Invalid Excel file"});
+            return;
         }
 
         const reportNumberPrefix = reportType === "gem"? "G":"R";
@@ -255,14 +288,32 @@ router.get('/fetchAllRudraksha', async (req, res) => {
 router.put('/report/:reportNumber', upload.single('image'), async (req, res) => {
     const { reportNumber } = req.params;
     const updatedData = req.body;
+    let publicUrl;
     try {
+        if (req.file) {
+            try {
+                const uniqueFileName = `reports/${Date.now()}-${req.file.originalname}`;
+                const file = bucket.file(uniqueFileName);
+
+                await file.save(req.file.buffer, {
+                    metadata: { contentType: req.file.mimetype },
+                });
+
+                await file.makePublic();
+                publicUrl = `https://storage.googleapis.com/${bucket.name}/${uniqueFileName}`;
+            } catch (uploadErr) {
+                res.status(500).json({ error: "Failed to upload image" });
+                return;
+            }
+        }
+
         let updatedReport;
         if (reportNumber.startsWith('G')) {
             updatedReport = await prisma.gemReport.update({
                 where: { reportNumber },
                 data: {
                     ...updatedData,
-                    imageUrl: `/uploads/${req.file?.filename}`
+                    ...(publicUrl ? { imageUrl: publicUrl } : {})
                 }
             });
         } else if (reportNumber.startsWith('R')) {
@@ -270,7 +321,7 @@ router.put('/report/:reportNumber', upload.single('image'), async (req, res) => 
                 where: { reportNumber },
                 data: {
                     ...updatedData,
-                    imageUrl: `/uploads/${req.file?.filename}`
+                    ...(publicUrl ? { imageUrl: publicUrl } : {})
                 }
             });
         }
