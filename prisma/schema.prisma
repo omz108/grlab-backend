@@ -17,7 +17,6 @@ model GemReport {
   id Int     @id @default(autoincrement())
   // reportType String?
   reportNumber String @unique
-  conclusions String?
   species String? // species/Variety
   weight String?
   colour String?
@@ -27,6 +26,7 @@ model GemReport {
   refractiveIndex String?
   specificGravity String?
   magnification String?
+  conclusions String?
   remarks String?
   imageUrl String?
 }
@@ -62,11 +62,4 @@ model User {
   name String?
   mobileNumber String
   emailId String?
-}
-
-model OTP {
-  id              Int         @id @default(autoincrement())
-  mobileNumber    String      @unique
-  otp             String
-  expiry          String
 }
