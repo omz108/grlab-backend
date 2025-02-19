@@ -6,7 +6,7 @@ import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import path from 'path';
-import twilio from 'twilio';
+// import twilio from 'twilio';
 
 const app = express();
 

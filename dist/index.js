@@ -15,24 +15,24 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const database_1 = require("./config/database");
 const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
-const otpRoutes_1 = __importDefault(require("./routes/otpRoutes"));
+// import otpRoutes from './routes/otpRoutes';
 const dotenv_1 = __importDefault(require("dotenv"));
 const cors_1 = __importDefault(require("cors"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const path_1 = __importDefault(require("path"));
-const twilio_1 = __importDefault(require("twilio"));
+// import twilio from 'twilio';
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use((0, cookie_parser_1.default)());
 app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, '..', 'uploads')));
 dotenv_1.default.config();
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const serviceSid = process.env.TWILIO_SERVICE_SID;
-if (!accountSid || !authToken || !serviceSid) {
-    throw new Error("Twilio credentials or service SID are missing.");
-}
-const client = (0, twilio_1.default)(accountSid, authToken);
+// const accountSid = process.env.TWILIO_ACCOUNT_SID;
+// const authToken = process.env.TWILIO_AUTH_TOKEN;
+// const serviceSid = process.env.TWILIO_SERVICE_SID;
+// if (!accountSid || !authToken || !serviceSid) {
+//     throw new Error("Twilio credentials or service SID are missing.");
+//   }
+// const client = twilio(accountSid, authToken);
 app.use((0, cors_1.default)({
     origin: 'http://localhost:5173', // Frontend URL
     credentials: true, // Allow cookies to be sent
@@ -79,7 +79,7 @@ app.post('/reportDetails', (req, res) => __awaiter(void 0, void 0, void 0, funct
 }));
 // Admin routes
 app.use('/admin', adminRoutes_1.default);
-app.use('/otp', otpRoutes_1.default);
+// app.use('/otp', otpRoutes);
 app.listen(3000, () => {
     console.log("App is  listening at port 3000");
 });
