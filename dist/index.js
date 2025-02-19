@@ -34,7 +34,7 @@ if (!accountSid || !authToken || !serviceSid) {
 }
 const client = (0, twilio_1.default)(accountSid, authToken);
 app.use((0, cors_1.default)({
-    origin: 'http://localhost:5173',
+    origin: 'http://localhost:5173', // Frontend URL
     credentials: true, // Allow cookies to be sent
 }));
 // app.get('/', (req, res) => {

@@ -5,9 +5,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.bucket = void 0;
 const firebase_admin_1 = __importDefault(require("firebase-admin"));
-const fs_1 = require("fs");
-const path_1 = __importDefault(require("path"));
-const serviceAccount = JSON.parse((0, fs_1.readFileSync)(path_1.default.join(__dirname, "../config/uparkom-grlab-firebase-adminsdk-fbsvc-d637029fb3.json"), "utf-8"));
+// const serviceAccount = JSON.parse(
+//   readFileSync(path.join(__dirname, "../config/uparkom-grlab-firebase-adminsdk-fbsvc-d637029fb3.json"), "utf-8")
+// );
+const serviceAccountString = process.env.FIREBASE_CREDENTIALS;
+if (!serviceAccountString) {
+    throw new Error("Missing FIREBASE_CREDENTIALS env variable");
+}
+const serviceAccount = JSON.parse(Buffer.from(serviceAccountString, "base64").toString("utf-8"));
 firebase_admin_1.default.initializeApp({
     credential: firebase_admin_1.default.credential.cert(serviceAccount),
     storageBucket: "gs://uparkom-grlab.firebasestorage.app",
