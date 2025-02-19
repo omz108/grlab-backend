@@ -27,7 +27,8 @@ dotenv.config();
 
 app.use(
     cors({
-      origin: 'http://localhost:5173', // Frontend URL
+    //   origin: 'http://localhost:5173', 
+      origin: 'https://grlab.in',
       credentials: true, // Allow cookies to be sent
     })
   );
