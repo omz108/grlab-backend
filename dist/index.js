@@ -34,7 +34,8 @@ dotenv_1.default.config();
 //   }
 // const client = twilio(accountSid, authToken);
 app.use((0, cors_1.default)({
-    origin: 'http://localhost:5173', // Frontend URL
+    //   origin: 'http://localhost:5173', 
+    origin: ['https://grlab.in', 'https://www.grlab.in'],
     credentials: true, // Allow cookies to be sent
 }));
 // app.get('/', (req, res) => {
