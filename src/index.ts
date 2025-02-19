@@ -1,7 +1,7 @@
 import express, { json } from 'express';
 import { prisma } from './config/database';
 import adminRoutes from './routes/adminRoutes';
-import otpRoutes from './routes/otpRoutes';
+// import otpRoutes from './routes/otpRoutes';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
@@ -83,7 +83,7 @@ app.post('/reportDetails', async (req, res) => {
 
 // Admin routes
 app.use('/admin', adminRoutes);
-app.use('/otp', otpRoutes);
+// app.use('/otp', otpRoutes);
 
 
 
