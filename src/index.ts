@@ -15,15 +15,15 @@ app.use(cookieParser());
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 dotenv.config();
 
-const accountSid = process.env.TWILIO_ACCOUNT_SID;
-const authToken = process.env.TWILIO_AUTH_TOKEN;
-const serviceSid = process.env.TWILIO_SERVICE_SID;
+// const accountSid = process.env.TWILIO_ACCOUNT_SID;
+// const authToken = process.env.TWILIO_AUTH_TOKEN;
+// const serviceSid = process.env.TWILIO_SERVICE_SID;
 
-if (!accountSid || !authToken || !serviceSid) {
-    throw new Error("Twilio credentials or service SID are missing.");
-  }
+// if (!accountSid || !authToken || !serviceSid) {
+//     throw new Error("Twilio credentials or service SID are missing.");
+//   }
 
-const client = twilio(accountSid, authToken);
+// const client = twilio(accountSid, authToken);
 
 app.use(
     cors({
