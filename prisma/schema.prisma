@@ -15,37 +15,31 @@ datasource db {
 
 model GemReport {
   id Int     @id @default(autoincrement())
-  // reportType String?
-  reportNumber String @unique
-  species String? // species/Variety
-  weight String?
-  colour String?
-  shapeCut String?
-  dimensions String?
-  opticCharacter String?
-  refractiveIndex String?
-  specificGravity String?
-  magnification String?
-  conclusions String?
-  remarks String?
-  imageUrl String?
+  reportNumber     String @unique
+  gemStoneName     String?
+  weight           String?
+  colour           String?
+  shapeCut         String?
+  dimension        String?
+  opticCharacter   String?
+  refractiveIndex  String?
+  specificGravity  String?
+  remarks          String?
+  imageUrl         String?
 }
 
 
 model RudrakshaReport {
-  id           Int @id @default(autoincrement())
-  reportNumber String @unique
-  weight       String?
-  colour       String?
-  mounted      String?
-  shape        String?
-  dimension    String?
-  naturalFaces     String?
-  artificialFaces  String?
+  id               Int @id @default(autoincrement())
+  reportNumber     String @unique
+  weight           String?
+  colour           String?
+  shape            String?
+  dimension        String?
+  realFace         String?
+  artificialFace   String?
   testCameOut      String?
-  xRayResult       String?
-  origin           String?
-  comment          String?
+  remarks          String?
   imageUrl         String?
 }
 
