@@ -32,6 +32,7 @@ model GemReport {
 model RudrakshaReport {
   id               Int @id @default(autoincrement())
   reportNumber     String @unique
+  rudrakshaName    String?
   weight           String?
   colour           String?
   shape            String?
