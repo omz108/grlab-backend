@@ -54,26 +54,6 @@ const multer_1 = __importDefault(require("multer"));
 const XLSX = __importStar(require("xlsx"));
 const firebaseConfig_1 = require("../config/firebaseConfig");
 const router = (0, express_1.Router)();
-// middleware multer
-// const storage = multer.diskStorage({
-//     destination: (req, file, cb) => {
-//         cb(null, 'uploads/');
-//     },
-//     filename: (req, file, cb) => {
-//         const uniqueName = `${Date.now()}-${file.originalname}`;
-//         cb(null, uniqueName);
-//     },
-// });
-// const upload = multer({
-//     storage,
-//     fileFilter: (req, file, cb) => {
-//         if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
-//             cb(null, true);
-//         } else {
-//             cb(new Error('Invalid file type. Only JPEG and PNG are allowed.'));
-//         }
-//     }
-// })
 const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage });
 // middleware for excelfile
