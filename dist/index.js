@@ -41,8 +41,8 @@ app.use((0, cors_1.default)({
 // app.get('/', (req, res) => {
 //     res.json({message: "Hello World!"})
 // })
-app.post('/reportDetails', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    const { reportNumber } = req.body;
+app.get('/reportDetails/:reportNumber', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    const { reportNumber } = req.params;
     if (!reportNumber) {
         res.status(400).json({ error: "Report number is required!" });
         return;
