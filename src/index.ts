@@ -39,8 +39,8 @@ app.use(
 //     res.json({message: "Hello World!"})
 // })
 
-app.post('/reportDetails', async (req, res) => {
-    const { reportNumber } = req.body;
+app.get('/reportDetails/:reportNumber', async (req, res) => {
+    const { reportNumber } = req.params;
 
     if (!reportNumber ) {
         res.status(400).json({ error: "Report number is required!"});
